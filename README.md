@@ -1,5 +1,8 @@
 # Policy Change Impact Agent v2
 
+**Live:** https://policy-change-impact-agent-v2-production.up.railway.app
+**Source:** https://github.com/navinsreejithprep/policy-change-impact-agent-v2
+
 An agentic (not pipeline) regulatory-impact assistant: given a regulation — supplied
 directly or described for discovery — it verifies the source, pauses for human
 confirmation before anything consequential, walks a linked internal knowledge
@@ -133,6 +136,38 @@ deterministic, clearly-labeled output instead of failing. If
 `FIRECRAWL_API_KEY` is missing, discovery searches return no results (handled
 as "no authoritative source found" rather than crashing) — supplying the
 regulation text directly still works fully offline.
+
+## Deployment
+
+Deployed on [Railway](https://railway.app), not Vercel, deliberately: this
+app depends on two things a serverless platform doesn't give you —
+
+1. **In-memory human-confirmation state.** The `interrupt()`/`Command(resume=...)`
+   checkpoint lives in the running Python process. Railway runs one
+   persistent process, so the `/api/analyze` call and the later `/api/confirm`
+   call reliably hit the same process. On Vercel's serverless functions, a
+   second request can land on a different, memory-isolated instance, and the
+   confirmation step would break unpredictably.
+2. **Local file writes.** Document ingestion (`/api/ingest`) and source
+   snapshots write to the container's local disk. Vercel's filesystem is
+   read-only outside `/tmp`, and `/tmp` isn't shared across instances or
+   persisted.
+
+**Caveat that still applies on Railway:** the local filesystem persists for
+the life of a running deployment, but a fresh deploy starts from a clean
+checkout of the git repo — so anything ingested via `/api/ingest` (or any
+saved snapshot) is lost on redeploy. That's fine for demo purposes; for
+long-lived ingested knowledge, back it with a database or object storage
+instead of local disk.
+
+To redeploy after a code change (from this repo, with the Railway CLI linked):
+
+```bash
+railway up --detach
+```
+
+Environment variables are managed via `railway variable set KEY=value`
+(never committed to the repo — `.env` is gitignored).
 
 ## Tests
 
