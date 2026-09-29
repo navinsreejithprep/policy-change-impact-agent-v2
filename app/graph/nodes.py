@@ -68,6 +68,18 @@ def classify(s):
     if s["input_invalid"]:
         return st(s, "Understanding request: input was empty")
 
+    if s.get("force_supplied"):
+        # The regulation text came from an explicit file upload — the act of
+        # uploading a document to analyze is already unambiguous, so the
+        # phrasing/length heuristic below (built for free-typed text, where
+        # intent is genuinely ambiguous) must not override it. Without this,
+        # a real regulation whose extracted text happens not to contain the
+        # exact obligation phrases below would wrongly fall through to the
+        # web-search path instead of being analyzed directly.
+        s["regulation_supplied"] = True
+        s["regulation_text"] = text
+        return st(s, "Understanding request: regulation document supplied — skipped web search")
+
     lowered = text.lower()
     if any(m in lowered for m in DISCOVERY_MARKERS):
         looks_like_regulation_text = False

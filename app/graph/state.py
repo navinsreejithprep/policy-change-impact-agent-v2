@@ -4,6 +4,7 @@ from typing import Any, TypedDict
 class AgentState(TypedDict, total=False):
     user_input: str
     input_invalid: bool
+    force_supplied: bool
 
     regulation_supplied: bool
     regulation_text: str

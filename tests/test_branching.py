@@ -76,3 +76,19 @@ def test_empty_input_is_invalid():
     r = start_analysis("   ")
     assert r["awaiting_confirmation"] is False
     assert r["report"]["status"] == "invalid_input"
+
+
+def test_force_supplied_skips_search_regardless_of_phrasing(monkeypatch):
+    """force_supplied=True (used for uploaded regulation documents) must
+    bypass the free-text phrasing/length heuristic entirely — a real
+    document's extracted text won't always contain "must"/"shall"/etc, and
+    uploading it is already an unambiguous signal that it's the regulation."""
+    calls = []
+    monkeypatch.setattr(N, "fc_search", lambda *a, **k: calls.append(1) or [])
+
+    ambiguous_text = "Cyber incidents get reported to the regulator inside a day."
+    r = start_analysis(ambiguous_text, force_supplied=True)
+
+    assert calls == []
+    assert any("skipped web search" in s.lower() for s in r["status"])
+    assert r["report"]["status"] != "insufficient_evidence"

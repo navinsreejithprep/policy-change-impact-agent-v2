@@ -78,11 +78,17 @@ def _package(thread_id: str, result: dict) -> dict:
     }
 
 
-def start_analysis(user_input: str) -> dict:
+def start_analysis(user_input: str, force_supplied: bool = False) -> dict:
     thread_id = str(uuid.uuid4())
     cfg = {"configurable": {"thread_id": thread_id}}
     result = GRAPH.invoke(
-        {"user_input": user_input, "source_search_attempts": 0, "evidence_iterations": 0, "status": []},
+        {
+            "user_input": user_input,
+            "force_supplied": force_supplied,
+            "source_search_attempts": 0,
+            "evidence_iterations": 0,
+            "status": [],
+        },
         cfg,
     )
     return _package(thread_id, result)

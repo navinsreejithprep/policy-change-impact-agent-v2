@@ -43,7 +43,10 @@ async def analyze_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=str(e))
     if not text.strip():
         raise HTTPException(status_code=400, detail="No extractable text was found in the uploaded file.")
-    return start_analysis(text)
+    # Uploading a document here is an unambiguous signal: it IS the
+    # regulation to analyze, regardless of whether its extracted text
+    # happens to contain the phrasing the free-text classifier looks for.
+    return start_analysis(text, force_supplied=True)
 
 
 @app.post("/api/confirm")
