@@ -17,6 +17,7 @@ DEFAULT_OFFICIAL_DOMAINS = {
     "pfrda.org.in",
     "mca.gov.in",
     "dot.gov.in",
+    "pib.gov.in",
     "gov.in",
 }
 
