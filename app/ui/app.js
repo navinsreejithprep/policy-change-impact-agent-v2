@@ -75,37 +75,43 @@ function renderKnowledge(entries) {
 }
 
 async function uploadDocument() {
-  const file = els.uploadInput.files[0];
-  if (!file) return;
+  const files = Array.from(els.uploadInput.files || []);
+  if (!files.length) return;
 
   els.uploadLabel.classList.add("loading");
-  els.uploadLabelText.textContent = `Ingesting ${file.name}…`;
   els.ingestResult.innerHTML = "";
+  const allLines = [];
 
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/ingest", { method: "POST", body: formData });
-    const data = await res.json();
+  // Ingested sequentially (not in parallel): each document is written to
+  // disk before the next one starts, so a later document's links_to can
+  // resolve against entries the earlier ones in this same batch just added.
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    els.uploadLabelText.textContent = `Ingesting ${file.name}… (${i + 1}/${files.length})`;
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/ingest", { method: "POST", body: formData });
+      const data = await res.json();
 
-    if (!res.ok) {
-      els.ingestResult.innerHTML = `<div class="err">${escapeHtml(data.detail || "Ingestion failed.")}</div>`;
-    } else {
-      const lines = [];
-      if (data.created && data.created.length) {
-        lines.push(`<div class="ok">Added ${data.created.length} entr${data.created.length === 1 ? "y" : "ies"} from "${escapeHtml(file.name)}".</div>`);
+      if (!res.ok) {
+        allLines.push(`<div class="err">${escapeHtml(file.name)}: ${escapeHtml(data.detail || "Ingestion failed.")}</div>`);
+      } else {
+        if (data.created && data.created.length) {
+          allLines.push(`<div class="ok">${escapeHtml(file.name)}: added ${data.created.length} entr${data.created.length === 1 ? "y" : "ies"}.</div>`);
+        }
+        (data.warnings || []).forEach((w) => allLines.push(`<div class="warn">${escapeHtml(file.name)}: ${escapeHtml(w)}</div>`));
       }
-      (data.warnings || []).forEach((w) => lines.push(`<div class="warn">${escapeHtml(w)}</div>`));
-      els.ingestResult.innerHTML = lines.join("");
-      await loadKnowledge();
+    } catch (e) {
+      allLines.push(`<div class="err">${escapeHtml(file.name)}: upload failed (${escapeHtml(e.message)}).</div>`);
     }
-  } catch (e) {
-    els.ingestResult.innerHTML = `<div class="err">Upload failed: ${escapeHtml(e.message)}</div>`;
-  } finally {
-    els.uploadLabel.classList.remove("loading");
-    els.uploadLabelText.textContent = "Upload a document (.pdf, .docx, .txt, .md)";
-    els.uploadInput.value = "";
   }
+
+  els.ingestResult.innerHTML = allLines.join("");
+  await loadKnowledge();
+  els.uploadLabel.classList.remove("loading");
+  els.uploadLabelText.textContent = "Upload documents (.pdf, .docx, .txt, .md)";
+  els.uploadInput.value = "";
 }
 
 function resetPanels() {
