@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Policy Change Impact Agent</title>
+<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">PA</div>
+      <div>
+        Policy Change Impact Agent
+        <small>Regulatory impact analysis — not legal advice</small>
+      </div>
+    </div>
+
+    <div class="examples">
+      <h4>Try an example</h4>
+      <button class="example-btn" data-example="Material cyber incidents must be reported to the regulator within 24 hours.">
+        Supplied regulation — 24-hour cyber incident reporting
+      </button>
+      <button class="example-btn" data-example="Find the latest official cybersecurity incident reporting requirement and assess its impact.">
+        Discovery — find the latest cyber incident reporting rule (requires confirmation)
+      </button>
+      <button class="example-btn" data-example="Purchases above ₹50 lakh require procurement committee approval.">
+        Supplied regulation — procurement approval threshold
+      </button>
+    </div>
+
+    <div class="kb-panel">
+      <h4>Organisation knowledge <span id="kb-count" class="kb-count"></span></h4>
+      <p class="kb-hint">This is the only "company data" the agent can see. Upload a real
+        policy, SOP, or annual-report excerpt to add to it — otherwise it's just the
+        bundled demo entries below.</p>
+      <label class="upload-btn" id="upload-label">
+        <span id="upload-label-text">Upload a document (.pdf, .docx, .txt, .md)</span>
+        <input type="file" id="upload-input" accept=".pdf,.docx,.txt,.md" hidden />
+      </label>
+      <div id="ingest-result"></div>
+      <ol class="kb-list" id="kb-list"></ol>
+    </div>
+
+    <div class="allowlist">
+      Official-source allowlist includes <code>cert-in.org.in</code>, <code>rbi.org.in</code>,
+      <code>sebi.gov.in</code>, <code>meity.gov.in</code>, <code>egazette.gov.in</code> and other
+      <code>*.gov.in</code> domains (highest confidence). Other real government domains
+      (<code>*.gov</code>, <code>*.gov.uk</code>, <code>.europa.eu</code>, …) are accepted as
+      "likely official" pending your confirmation. Blogs, news, and law-firm commentary are
+      always treated as secondary and trigger another search.
+    </div>
+  </aside>
+
+  <main class="main">
+    <h1>What does this regulatory change mean for us?</h1>
+    <p class="sub">Paste the regulation text, or describe a change to look up. The agent will branch, verify its source, pause for your confirmation when needed, and loop back for more evidence if the first pass is too thin.</p>
+
+    <div class="input-card">
+      <textarea id="user-input" placeholder="e.g. Material cyber incidents must be reported to the regulator within 24 hours."></textarea>
+      <div class="input-row">
+        <label class="upload-btn light" id="regulation-upload-label">
+          <span id="regulation-upload-text">Or upload the regulation document (.pdf, .docx, .txt, .md)</span>
+          <input type="file" id="regulation-upload-input" accept=".pdf,.docx,.txt,.md" hidden />
+        </label>
+        <button class="primary" id="submit-btn">Analyze</button>
+      </div>
+    </div>
+
+    <div class="activity" id="activity">
+      <h3>Activity</h3>
+      <ol id="activity-list"></ol>
+    </div>
+
+    <div class="confirm-card" id="confirm-card">
+      <span class="badge">Human confirmation required</span>
+      <div><strong id="confirm-title">—</strong></div>
+      <dl class="confirm-grid" id="confirm-grid"></dl>
+      <div class="amend-note" id="amend-note" style="display:none;"></div>
+      <div class="confirm-actions">
+        <button class="primary" id="confirm-btn">Confirm and analyze</button>
+        <button class="secondary" id="search-again-btn">Search again</button>
+      </div>
+    </div>
+
+    <div class="insufficient-card" id="insufficient-card">
+      <h3>Insufficient evidence</h3>
+      <p id="insufficient-message"></p>
+      <ul id="insufficient-list"></ul>
+    </div>
+
+    <div class="results" id="results"></div>
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
