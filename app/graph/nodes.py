@@ -247,7 +247,14 @@ def extract(s):
         ]
     }
     result = structured_call(prompt, fallback)
-    requirements = result.get("requirements") or fallback["requirements"]
+    # `structured_call` returns the exact `fallback` object (same reference)
+    # only when the LLM call itself failed or was unavailable — this `is`
+    # check is what distinguishes "the LLM legitimately found nothing" (a
+    # real, valid result we must not override) from "the LLM never actually
+    # ran." Using `result.get(...) or fallback[...]` here previously
+    # collapsed those two very different cases into the same fallback text.
+    llm_ran = result is not fallback
+    requirements = result.get("requirements", []) if llm_ran else fallback["requirements"]
     for r in requirements:
         if isinstance(r.get("requirement"), str):
             r["requirement"] = redact_secrets(r["requirement"])
@@ -382,9 +389,17 @@ def impact(s):
         f"Evidence: {json.dumps(evidence)}"
     )
     result = structured_call(prompt, fallback)
-    s["impacts"] = result.get("impacts") or fallback["impacts"]
-    s["assumptions"] = result.get("assumptions") or fallback["assumptions"]
-    s["actions"] = result.get("actions") or fallback["actions"]
+    # Same distinction as in extract(): only substitute the deterministic
+    # fallback when the LLM call genuinely didn't run. A real LLM response
+    # that returns an empty "assumptions" or "actions" list (nothing to flag,
+    # nothing to recommend) is a legitimate result, not a failure — the old
+    # `or fallback[...]` here silently relabeled that as "No live LLM
+    # analysis was available", which was actively misleading whenever the
+    # LLM had, in fact, just produced a good result.
+    llm_ran = result is not fallback
+    s["impacts"] = result.get("impacts", []) if llm_ran else fallback["impacts"]
+    s["assumptions"] = result.get("assumptions", []) if llm_ran else fallback["assumptions"]
+    s["actions"] = result.get("actions", []) if llm_ran else fallback["actions"]
     return st(s, "Generating impact assessment")
 
 
